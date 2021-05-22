@@ -9,20 +9,57 @@ app.use(cors());
 
 const users = [];
 
+function checkIfIsUndefined(value){
+  return typeof value === 'undefined'
+}
+
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const foundUser = users.find(user => user.username === username)
+  if(checkIfIsUndefined(foundUser)){
+    return response.status(404).json({error: 'User does not exists'})
+  }
+  request.user = foundUser
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request
+  const numberOfTODOS = user.todos.length
+  if(numberOfTODOS > 9 && !user.pro){
+    return response.status(403).json({error: 'You already have 10 todos. To add more todo to your todo list, you should assign the Pro Plan'})
+  }
+  return next()
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const foundUser = users.find(user => user.username === username)
+  if(checkIfIsUndefined(foundUser)){
+    return response.status(404).json({ error: `user ${username} does not exists` })
+  }
+  const { id } = request.params
+  const isItAValidUUID = validate(id)
+  if(!isItAValidUUID){
+    return response.status(400).json({error: 'You should provide a valid uuid'})
+  }
+  const foundTODO = foundUser.todos.find(todo => todo.id===id)
+  if(checkIfIsUndefined(foundTODO)){
+    return response.status(404).json({error: 'Todo does not exists'})
+  }
+  request.todo = foundTODO
+  request.user = foundUser
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params
+  const foundUser = users.find(user => user.id === id)
+  if(checkIfIsUndefined(foundUser)){
+    return response.status(404).json({ error: 'User does not exists' })
+  }
+  request.user = foundUser
+  return next()
 }
 
 app.post('/users', (request, response) => {
